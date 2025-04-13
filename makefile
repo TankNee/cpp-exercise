@@ -8,7 +8,7 @@ CXXFLAGS = -std=c++17 -g
 LDFLAGS = -lstdc++ -lgtest -lgtest_main -lm
 
 # 源文件
-SRCS = binary_tree.cc binary_tree.test.cc
+SRCS = binary_tree.cc binary_tree_test.cc
 
 # 目标文件
 OBJS = $(SRCS:.cc=.o)

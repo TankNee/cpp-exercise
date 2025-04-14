@@ -1,1 +1,8 @@
 Language: Cpp
+BasedOnStyle: Google
+ColumnLimit: 120
+
+DerivePointerAlignment: false
+IncludeBlocks: Merge
+IndentPPDirectives: AfterHash
+SortIncludes: true

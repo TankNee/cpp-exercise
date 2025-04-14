@@ -5,10 +5,10 @@ CXX = g++
 CXXFLAGS = -std=c++17 -g
 
 # 链接选项
-LDFLAGS = -lstdc++ -lgtest -lgtest_main -lm
+LDFLAGS = -lstdc++ -lgtest -lgtest_main -lm -pthread
 
 # 源文件
-SRCS = binary_tree.cc binary_tree_test.cc
+SRCS = binary_tree_test.cc
 
 # 目标文件
 OBJS = $(SRCS:.cc=.o)

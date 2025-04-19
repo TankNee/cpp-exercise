@@ -6,6 +6,7 @@
 
 #include <stack>
 #include <vector>
+#include <memory>
 
 namespace binary_tree_execise {
 
@@ -16,7 +17,7 @@ class BinaryTreeNode {
   BinaryTreeNode<T>* left;
   BinaryTreeNode<T>* right;
 
-  explicit BinaryTreeNode(T value_, BinaryTreeNode<T>* left_ = nullptr, BinaryTreeNode<T>* right_ = nullptr)
+  explicit BinaryTreeNode(const T& value_, BinaryTreeNode<T>* left_ = nullptr, BinaryTreeNode<T>* right_ = nullptr)
       : value(value_), left(left_), right(right_) {}
   BinaryTreeNode(const BinaryTreeNode&) = default;
   BinaryTreeNode& operator=(const BinaryTreeNode&) = default;
@@ -27,6 +28,9 @@ class BinaryTreeNode {
 
 template <typename T>
 class BinaryTree {
+ private:
+  size_t size_ = 0;
+
  public:
   BinaryTreeNode<T>* root_;
   BinaryTree() : root_(nullptr) {}
@@ -35,17 +39,23 @@ class BinaryTree {
   BinaryTree& operator=(BinaryTree&& other) noexcept = default;
   ~BinaryTree() = default;
   /**
-   * @brief Insert a value into the binary tree
+   * @brief Emplace a value into the binary tree
    * @param value The value to be inserted
    * @return true if the value is inserted successfully, false otherwise
    */
-  [[nodiscard]] bool Insert(const T& value);
+  [[nodiscard]] bool Emplace(const T& value);
   /**
-   * @brief Search a value in the binary tree
-   * @param value The value to be searched
+   * @brief Emplace a value into the binary tree
+   * @param node The node pointer to be inserted
+   * @return true if the value is inserted successfully, false otherwise
+   */
+  [[nodiscard]] bool Insert(BinaryTreeNode<T>& node);
+  /**
+   * @brief Check a value in the binary tree
+   * @param value The value to be checked
    * @return true if the value is found, false otherwise
    */
-  [[nodiscard]] bool Search(const T& value);
+  [[nodiscard]] bool IsExist(const T& value) const;
   /**
    * @brief Remove a value from the binary tree
    * @param value The value to be removed
@@ -53,34 +63,46 @@ class BinaryTree {
    */
   [[nodiscard]] bool Remove(const T& value);
   /**
+   * @brief TODO: Remove a value from the binary tree
+   * @param node The node to be removed
+   * @return true if the node is removed successfully, false otherwise
+   */
+  [[nodiscard]] bool Remove(const BinaryTreeNode<T>* node);
+  /**
+   * @brief TODO: Remove a value from the binary tree
+   * @param node The node to be removed
+   * @return true if the node is removed successfully, false otherwise
+   */
+  [[nodiscard]] bool Remove(const BinaryTreeNode<T>& node);
+  /**
    * @brief Check if the binary tree is empty
    * @return true if the binary tree is empty, false otherwise
    */
-  [[nodiscard]] bool IsEmpty();
+  [[nodiscard]] bool IsEmpty() const;
   /**
    * @brief Get the size of the binary tree
    * @return The size of the binary tree
    */
-  [[nodiscard]] size_t Size();
+  [[nodiscard]] size_t Size() const;
   /**
    * @brief Traverse the binary tree in preorder
-   * @param results The vector to store the traversal results
+   * @returns The vector to store the traversal results
    */
-  void PreorderTraversal(std::vector<T>& results);
+  std::vector<T> PreorderTraversal() const;
   /**
    * @brief Traverse the binary tree in inorder
-   * @param results The vector to store the traversal results
+   * @returns The vector to store the traversal results
    */
-  void InorderTraversal(std::vector<T>& results);
+  std::vector<T> InorderTraversal() const;
   /**
    * @brief Traverse the binary tree in postorder
-   * @param results The vector to store the traversal results
+   * @returns The vector to store the traversal results
    */
-  void PostorderTraversal(std::vector<T>& results);
+  std::vector<T> PostorderTraversal() const;
 };
 
 template <typename T>
-bool BinaryTree<T>::Insert(const T& value) {
+bool BinaryTree<T>::Emplace(const T& value) {
   // check root node is null
   if (root_ == nullptr) {
     this->root_ = new BinaryTreeNode<T>(value, nullptr, nullptr);
@@ -110,11 +132,50 @@ bool BinaryTree<T>::Insert(const T& value) {
       }
     }
   }
+  this->size_ += 1;
   return true;
 }
 
 template <typename T>
-bool BinaryTree<T>::Search(const T& value) {
+bool BinaryTree<T>::Insert(BinaryTreeNode<T>& node) {
+  if (node.left != nullptr && node.right != nullptr) {
+    return false;
+  }
+  // check root node is null
+  if (root_ == nullptr) {
+    this->root_ = new BinaryTreeNode<T>(node.value, nullptr, nullptr);
+  } else {
+    BinaryTreeNode<T>* current = root_;
+    while (current != nullptr) {
+      if (node.value < current->value) {
+        if (current->left == nullptr) {
+          BinaryTreeNode<T>* node_ = new BinaryTreeNode<T>(node.value, nullptr, nullptr);
+          current->left = node_;
+          break;
+        } else {
+          current = current->left;
+        }
+      } else if (node.value > current->value) {
+        // print left and right node
+        if (current->right == nullptr) {
+          BinaryTreeNode<T>* node_ = new BinaryTreeNode<T>(node.value, nullptr, nullptr);
+          current->right = node_;
+          break;
+        } else {
+          current = current->right;
+        }
+      } else {
+        // Value already exists, No action taken
+        return false;
+      }
+    }
+  }
+  this->size_ += 1;
+  return true;
+}
+
+template <typename T>
+bool BinaryTree<T>::IsExist(const T& value) const {
   if (root_ == nullptr) {
     return false;
   } else {
@@ -156,8 +217,8 @@ bool BinaryTree<T>::Remove(const T& value) {
     return false;
   }
 
-  // 情况1：要删除的节点是叶子节点
   if (current->left == nullptr && current->right == nullptr) {
+    // 情况1：要删除的节点是叶子节点
     if (current == root_) {
       root_ = nullptr;
     } else if (is_left_child) {
@@ -166,9 +227,8 @@ bool BinaryTree<T>::Remove(const T& value) {
       parent->right = nullptr;
     }
     delete current;
-  }
-  // 情况2：要删除的节点有一个子节点
-  else if (current->left == nullptr || current->right == nullptr) {
+  } else if (current->left == nullptr || current->right == nullptr) {
+    // 情况2：要删除的节点有一个子节点
     BinaryTreeNode<T>* child = (current->left != nullptr) ? current->left : current->right;
     if (current == root_) {
       root_ = child;
@@ -178,9 +238,8 @@ bool BinaryTree<T>::Remove(const T& value) {
       parent->right = child;
     }
     delete current;
-  }
-  // 情况3：要删除的节点有两个子节点
-  else {
+  } else {
+    // 情况3：要删除的节点有两个子节点
     BinaryTreeNode<T>* successor = current->right;
     BinaryTreeNode<T>* successor_parent = current;
 
@@ -202,90 +261,102 @@ bool BinaryTree<T>::Remove(const T& value) {
     delete successor;
   }
 
+  this->size_ -= 1;
   return true;
 }
 
 template <typename T>
-bool BinaryTree<T>::IsEmpty() {
+bool BinaryTree<T>::Remove(const BinaryTreeNode<T>* node) {
+  if (node == nullptr) {
+    return false;
+  }
+  const T& value = node->value;
+  return this->Remove(value);
+}
+
+template <typename T>
+bool BinaryTree<T>::Remove(const BinaryTreeNode<T>& node) {
+  const T& value = node.value;
+  return this->Remove(value);
+}
+
+template <typename T>
+bool BinaryTree<T>::IsEmpty() const {
   return root_ == nullptr;
 }
 
 template <typename T>
-size_t BinaryTree<T>::Size() {
-  if (root_ == nullptr) {
-    return 0;
-  }
-  size_t count = 0;
-  std::stack<BinaryTreeNode<T>*> node_stack;
-  node_stack.push(root_);
-  while (!node_stack.empty()) {
-    BinaryTreeNode<T>* node = node_stack.top();
-
-    count += 1;
-    node_stack.pop();
-
-    if (node->right != nullptr) {
-      node_stack.push(node->right);
-    }
-    if (node->left != nullptr) {
-      node_stack.push(node->left);
-    }
-  }
-  return count;
+size_t BinaryTree<T>::Size() const {
+  return this->size_;
 }
 
 template <typename T>
-void BinaryTree<T>::PreorderTraversal(std::vector<T>& results) {
+std::vector<T> BinaryTree<T>::PreorderTraversal() const {
+  std::vector<T> results;
   if (root_ == nullptr) {
-    return;
+    return results;
   }
   std::stack<BinaryTreeNode<T>*> node_stack;
   node_stack.push(root_);
-  while (!node_stack.empty()) {
+  size_t size = 1;
+  while (size != 0) {
     BinaryTreeNode<T>* node = node_stack.top();
     node_stack.pop();
+    size -= 1;
     results.push_back(node->value);
     if (node->right != nullptr) {
       node_stack.push(node->right);
+      size += 1;
     }
     if (node->left != nullptr) {
       node_stack.push(node->left);
+      size += 1;
     }
   }
+  return results;
 }
 
 template <typename T>
-void BinaryTree<T>::InorderTraversal(std::vector<T>& results) {
+std::vector<T> BinaryTree<T>::InorderTraversal() const {
+  std::vector<T> results;
   if (root_ == nullptr) {
-    return;
+    return results;
   }
   std::stack<BinaryTreeNode<T>*> node_stack;
+  size_t size = 0;
   BinaryTreeNode<T>* current = root_;
 
-  while (current != nullptr || !node_stack.empty()) {
+  while (current != nullptr || size != 0) {
     while (current != nullptr) {
       node_stack.push(current);
+      size += 1;
       current = current->left;
     }
     current = node_stack.top();
     node_stack.pop();
+    size -= 1;
     results.push_back(current->value);
     current = current->right;
   }
+  return results;
 }
 
 template <typename T>
-void BinaryTree<T>::PostorderTraversal(std::vector<T>& results) {
+std::vector<T> BinaryTree<T>::PostorderTraversal() const {
+  std::vector<T> results;
   if (root_ == nullptr) {
-    return;
+    return results;
   }
   std::stack<BinaryTreeNode<T>*> node_stack;
+  size_t size = 0;
+
   BinaryTreeNode<T>* last_visited = nullptr;
   BinaryTreeNode<T>* current = root_;
-  while (!node_stack.empty() || current != nullptr) {
+  while (current != nullptr || size != 0) {
     if (current != nullptr) {
       // 先遍历左子树，直到最左节点
       node_stack.push(current);
+      size += 1;
       current = current->left;
     } else {
       // 当前节点为空，从栈中取出一个节点
@@ -298,9 +369,11 @@ void BinaryTree<T>::PostorderTraversal(std::vector<T>& results) {
         results.push_back(peek_node->value);
         last_visited = peek_node;
         node_stack.pop();
+        size -= 1;
       }
     }
   }
+  return results;
 }
 
 }  // namespace binary_tree_execise
